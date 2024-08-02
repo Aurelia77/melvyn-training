@@ -1,11 +1,15 @@
 "use client";
 
 import { User2 } from "lucide-react";
-// import { useState } from "react";
+import { useState } from "react";
 
-function NameForm() {
+function NameForm({ initialName }) {
   // 🦁 Ajoute un `useState` pour le nom
   // 💡 useState("")
+
+  const [name, setName] = useState(initialName ?? "");
+
+  console.log(name, initialName);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -15,7 +19,15 @@ function NameForm() {
           {/* 🦁 Affiche le `name` juste ici */}
           {/* 🦁 Utilise un opérateur ternaire pour soit afficher "No name" en rouge */}
           {/* 🦁 Soit afficher le `name` */}
-          <p className="text-error">No name</p>
+          {name ? <p>{name}</p> : <p className="text-error">No name</p>}
+          {name !== initialName && (
+            <button
+              className="btn btn-warning btn-sm"
+              onClick={() => setName(initialName)}
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
       <div className="divider">Form</div>
@@ -24,7 +36,13 @@ function NameForm() {
         {/* 🦁 Transforme cette input en **controlled input** */}
         {/* Il faut ajouter la propriété `value` et `onChange` */}
         {/* 💡 onChange={e => e.target.value} : pour récupérer la value */}
-        <input type="text" className="grow" placeholder="Melvynx" />
+        <input
+          type="text"
+          className="grow"
+          placeholder="Melvynx"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </label>
     </div>
   );
@@ -33,7 +51,9 @@ function NameForm() {
 export default function App() {
   return (
     <div>
-      <NameForm />
+      <NameForm initialName="nom !!!" />
+      <hr className="my-4" />
+      <NameForm initialName="nom2" />
     </div>
   );
 }

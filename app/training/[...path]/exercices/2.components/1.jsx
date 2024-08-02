@@ -1,3 +1,5 @@
+// Suite à une erreur j'ai tout supprimé ce que j'avais fait :( (que les exo 1,2,3)
+
 export default function App() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

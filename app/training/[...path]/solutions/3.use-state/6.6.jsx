@@ -150,6 +150,7 @@ const TodoItem = ({ todo, deleteTodo, updateTodo }) => {
                 text: newValue,
               });
               setIsEditing(false);
+              console.log("BLUR !!!");
             }}
             defaultValue={todo.text}
           />
