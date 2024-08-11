@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { useEffect } from "react";
 import { useState } from "react";
 
 // create a method that takes ms and return an object with hours, minutes, seconds and milliseconds¨
@@ -16,8 +17,22 @@ const Timer = () => {
   const [milliseconds, setMilliseconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
+  console.log("isRunning", isRunning);
+  console.log("milliseconds", milliseconds);
+
   // 🦁 Utilise un `useEffect` pour venir incrémenter de 1 `milliseconds`
   // 🦁 Uniquement si `isRunning` est à true
+  useEffect(() => {
+    if (isRunning) {
+      // Pour demander d'exécuter une fonction selon un interval de temps => setInterval
+      const interval = setInterval(() => {
+        //setMilliseconds(milliseconds + 1);
+        setMilliseconds((prevMilliseconds) => prevMilliseconds + 10);
+      }, 10); // ici c'est en millisecondes
+      // Bien supprimer l'interval !!!
+      return () => clearInterval(interval);
+    }
+  }, [isRunning, milliseconds]);
 
   const { hours, minutes, seconds, milliseconds: ms } = msToTime(milliseconds);
 
