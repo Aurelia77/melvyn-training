@@ -2,15 +2,93 @@
 
 import { cn } from "@/src/utils/cn";
 import { Check, ShoppingBasket } from "lucide-react";
+import { useContext } from "react";
+import { createContext } from "react";
 import { useState } from "react";
+import { create } from "zustand";
 
-// 🦁 Créer un context avec les informations suivant :
-// - `items` : un tableau de type `{ id: number, name: string, cover: string }`
-// - `onDeleteItem` : une fonction qui va supprimer un item
-// - `onAddItem` : une fonction qui va ajouter un item dans le panier
+const SHOES = [
+  {
+    name: "Air Max Plus",
+    id: 1,
+    cover: "/nikes/air-max-plus.jpeg",
+  },
+  {
+    name: "Air Force",
+    id: 2,
+    cover: "/nikes/air-force.png",
+  },
+  {
+    name: "Dunk Retro",
+    id: 3,
+    cover: "/nikes/dunk-retro.png",
+  },
+  {
+    name: "Air Max",
+    id: 4,
+    cover: "/nikes/air-max.png",
+  },
+];
 
-// 🦁 Supprime les imports et utilise le context
-const Header = ({ items, onDeleteItem }) => {
+// EXO 2
+const useBasketStore = create((set) => ({
+  items: [],
+  //  const onAddItem = (item) => {  setItems((prevItems) => [...prevItems, item]);  };
+  onAddItem: (newItem) => {
+    set((state) => ({
+      //...state,         // idem mais ne sert à rien car ça fait pareil !!!
+      items: [...state.items, newItem],
+    }));
+  },
+  onDeleteItem: (deleteItem) =>
+    set((currentState) => ({
+      items: currentState.items.filter((i) => i.id !== deleteItem.id),
+    })),
+}));
+
+const BasketContext = createContext(null);
+
+const useBasketContext = () => {
+  if (useContext(BasketContext) === null)
+    throw new Error("useBasketContext must be used within a BasketProvider");
+
+  return useContext(BasketContext);
+};
+
+const BasketContextProvider = ({ children }) => {
+  const [items, setItems] = useState([]);
+
+  console.log(items);
+
+  const onDeleteItem = (item) => {
+    setItems((prevItems) => prevItems.filter((i) => i.id !== item.id));
+  };
+
+  // EXO 1
+  const isSelected = (items, idItemSelected) => {
+    return items.some((item) => item.id === idItemSelected);
+  };
+
+  const onAddItem = (item) => {
+    console.log(item);
+    setItems((prevItems) => [...prevItems, item]);
+  };
+
+  return (
+    <BasketContext.Provider
+      value={{ items, setItems, onAddItem, onDeleteItem, isSelected }}
+    >
+      {children}
+    </BasketContext.Provider>
+  );
+};
+
+const Header = () => {
+  // EXO 1
+  // const { items, onDeleteItem } = useBasketContext();
+  // EXO 2
+  const { items, onDeleteItem } = useBasketStore();
+
   return (
     <div className="flex items-center justify-between rounded-lg border border-neutral/40 bg-base-200 px-8 py-4 shadow-lg">
       <h2 className="text-2xl font-bold">Shoes</h2>
@@ -57,44 +135,29 @@ const Header = ({ items, onDeleteItem }) => {
 };
 
 export default function App() {
-  // 🦁 Déplace le state dans un context
-  const [items, setItems] = useState([]);
-
   return (
-    <div className="flex flex-col gap-8">
-      <Header
-        // 🦁 Enlève les props
-        onDeleteItem={(item) => {
-          setItems((prevItems) => prevItems.filter((i) => i.id !== item.id));
-        }}
-        items={items}
-      />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {SHOES.map((shoe) => (
-          <ShoeCard
-            // 🦁 Enlève les props
-            isSelected={items.some((item) => item.id === shoe.id)}
-            onShoppingBasketClick={() => {
-              console.log("click", shoe);
-              if (items.some((item) => item.id === shoe.id)) {
-                setItems((prevItems) =>
-                  prevItems.filter((item) => item.id !== shoe.id)
-                );
-              } else {
-                setItems((prevItems) => [...prevItems, shoe]);
-              }
-            }}
-            key={shoe.id}
-            shoe={shoe}
-          />
-        ))}
+    <BasketContextProvider>
+      <div className="flex flex-col gap-8">
+        <Header />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {SHOES.map((shoe) => (
+            <ShoeCard key={shoe.id} shoe={shoe} />
+          ))}
+        </div>
       </div>
-    </div>
+    </BasketContextProvider>
   );
 }
 
-const ShoeCard = ({ shoe, isSelected = false, onShoppingBasketClick }) => {
+const ShoeCard = ({ shoe }) => {
   // 🦁 Utilise le context pour récupérer le state `isSelected` ainsi que `onAddItem` et `onDeleteItem`
+  // EXO 1
+  //const { items, onAddItem, onDeleteItem } = useBasketContext();
+  // EXO 2
+  //const { items, onAddItem, onDeleteItem } = useBasketStore();
+
+  //const isSelected = items.some((item) => item.id === shoe.id); // si on trouve un item dans le panier qui a le même id que le shoe.id c'est qu'il a été sélectionné
+
   return (
     <div className="card flex w-full bg-base-300 shadow-xl">
       <figure>
@@ -106,10 +169,16 @@ const ShoeCard = ({ shoe, isSelected = false, onShoppingBasketClick }) => {
       </figure>
       <div className="card-body">
         <h2 className="card-title">{shoe.name}</h2>
-        <div className="card-actions flex w-full items-end justify-end">
+        {/* EXO 1 et 2 */}
+        {/* <div className="card-actions flex w-full items-end justify-end">
           <button
-            // En fonction de `useSelected` on ajoutera ou supprimera du panier
-            onClick={onShoppingBasketClick}
+            onClick={() => {
+              if (isSelected) {
+                onDeleteItem(shoe);
+              } else {
+                onAddItem(shoe);
+              }
+            }}
             className={cn("btn", {
               "btn-outline": isSelected,
               "btn-primary": !isSelected,
@@ -118,32 +187,46 @@ const ShoeCard = ({ shoe, isSelected = false, onShoppingBasketClick }) => {
             <ShoppingBasket size={16} />{" "}
             {isSelected ? <Check size={16} /> : null}
           </button>
-        </div>
+        </div> */}
+        {/* EXO 3 */}
+        <ShoeCardBasketButton shoe={shoe} />
       </div>
     </div>
   );
 };
 
-// *** Data ***
-const SHOES = [
-  {
-    name: "Air Max Plus",
-    id: 1,
-    cover: "/nikes/air-max-plus.jpeg",
-  },
-  {
-    name: "Air Force",
-    id: 2,
-    cover: "/nikes/air-force.png",
-  },
-  {
-    name: "Dunk Retro",
-    id: 3,
-    cover: "/nikes/dunk-retro.png",
-  },
-  {
-    name: "Air Max",
-    id: 4,
-    cover: "/nikes/air-max.png",
-  },
-];
+const ShoeCardBasketButton = ({ shoe }) => {
+  // EXO 3
+
+  // Les ajouter un par un car sinon on retourne ITEMS à chaque fois car il fait parti du useBasketStore (même si on ne l'utilise pas)
+  const onAddItem = useBasketStore((s) => s.onAddItem);
+  const onDeleteItem = useBasketStore((s) => s.onDeleteItem);
+  // ces éléments sont des STABLE REF donc ne créent pas de re-render inutile
+
+  // Exo 3 (2)
+  //Ce code provoque un render de notre component pour chaque item du panier.
+  //Zustand te permet de récupérer uniquement les informations qui sont nécessaires à notre component. Cela permet de ne pas re-render le component inutilement.
+  //Alors qu'on pourrait faire en sorte que ce soit uniquement lorsque l'item actuel est modifié qu'il render.
+  //Pour ça tu peux utiliser cette syntaxe :
+  const isSelected = useBasketStore((s) =>
+    s.items.some((item) => item.id === shoe.id)
+  );
+
+  return (
+    <button
+      onClick={() => {
+        if (isSelected) {
+          onDeleteItem(shoe);
+        } else {
+          onAddItem(shoe);
+        }
+      }}
+      className={cn("btn", {
+        "btn-outline": isSelected,
+        "btn-primary": !isSelected,
+      })}
+    >
+      <ShoppingBasket size={16} /> {isSelected ? <Check size={16} /> : null}
+    </button>
+  );
+};
