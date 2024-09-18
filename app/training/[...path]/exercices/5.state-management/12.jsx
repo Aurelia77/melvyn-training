@@ -316,12 +316,22 @@ const ToggleOpen = () => {
 export default function App() {
   console.log("App Re-render");
 
+  const [aaa, setAaa] = useState("coucou");
+
   // Maintenant <DialogTrigger>, <DialogTrigger> et <DialogClose> sont enfants de App et non de Dialog, et communiquent avec <Dialog> via le contexte.
   return (
     <div>
-      <CountRenderProvider>
+      <input
+        type="text"
+        value={aaa}
+        onChange={(e) => {
+          console.log("CHANGE");
+          setAaa(e.target.value);
+        }}
+      />
+      {/* <CountRenderProvider>
         <ToggleOpen />
-      </CountRenderProvider>
+      </CountRenderProvider> */}
 
       {/* 🦁 Mets ensemble nos components pour avoir un Dialog fonctionnel */}
       <Dialog buttonText="Open dialog">

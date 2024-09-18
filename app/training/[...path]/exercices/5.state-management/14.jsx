@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { createContext } from "react";
 import { useState } from "react";
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 const SHOES = [
   {
@@ -134,9 +135,61 @@ const Header = () => {
   );
 };
 
+// Exercie 1 suivant (juste pour test)
+const useStore = create((set, get) => ({
+  count: 0,
+  increment: () => set((curr) => ({ count: curr.count + 1 })),
+  decrement: () => set((curr) => ({ count: curr.count - 1 })),
+}));
+
+const DisplayCount = () => {
+  const { count } = useStore();
+
+  console.log("Render DisplayCount");
+
+  return <div>{count}</div>;
+};
+
+const CounterActions = () => {
+  // 🦁 Optimise la récupération de la valeur
+  //const { increment, decrement } = useStore();
+  // Ci-dessus => <DisplayCount /> et <IncrementCount /> RERENDER
+  // 1 => MIEUX
+  // const increment = useStore((s) => s.increment);
+  // const decrement = useStore((s) => s.decrement);
+  // Comme ça seuelemtn<DisplayCount /> RERENDER
+  // idem 1
+  // const { increment, decrement } = useStore((state) => ({
+  //   increment: state.increment,
+  //   decrement: state.decrement,
+  // }));
+
+  // 2 => avec useShallow (fait pareil donc le 1 suffit apparemment...)
+  // 🦁 Utilise "useShallow"
+  const { increment, decrement } = useStore(
+    useShallow((state) => ({
+      increment: state.increment,
+      decrement: state.decrement,
+    }))
+  );
+
+  console.log("Render IncrementCount");
+
+  return (
+    <div style={{ display: "flex", gap: 4 }}>
+      <button onClick={() => increment()}>Increment count</button>
+      <button onClick={() => decrement()}>Decrement count</button>
+    </div>
+  );
+};
+
 export default function App() {
   return (
     <BasketContextProvider>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <DisplayCount />
+        <CounterActions />
+      </div>
       <div className="flex flex-col gap-8">
         <Header />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -197,11 +250,12 @@ const ShoeCard = ({ shoe }) => {
 
 const ShoeCardBasketButton = ({ shoe }) => {
   // EXO 3
-
   // Les ajouter un par un car sinon on retourne ITEMS à chaque fois car il fait parti du useBasketStore (même si on ne l'utilise pas)
   const onAddItem = useBasketStore((s) => s.onAddItem);
   const onDeleteItem = useBasketStore((s) => s.onDeleteItem);
   // ces éléments sont des STABLE REF donc ne créent pas de re-render inutile
+
+  // déjà bien car seulement la CARD qui est cliquée RENDER, mais on peut aller plus loin (pas forcement nécessaire !!!!!!!!!!) et faire que ce soit juste le bouton (et la liste bien sûre mais pas tte la card)
 
   // Exo 3 (2)
   //Ce code provoque un render de notre component pour chaque item du panier.
